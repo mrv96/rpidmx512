@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 # build the firmware in the current directory 
 # and add the last line to the first line to upload it via do-tftp.sh
@@ -23,6 +23,6 @@ if [ -f "$filename" ]; then
     if (( filesize > maxsize )); then
         echo "Firmware is too big for SPI Flash, maximum $maxsize."
     else
-        ../scripts/do-tftp.sh 192.168.1.56 
+        ../scripts/do-tftp-one.sh 192.168.210.34
     fi
 fi

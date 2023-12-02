@@ -74,13 +74,26 @@ void ArtNetNode::CheckMergeTimeouts(const uint32_t nPortIndex) {
 }
 
 void ArtNetNode::HandleDmx() {
-	const auto *const pArtDmx = reinterpret_cast<artnet::ArtDmx *>(m_pReceiveBuffer);
+	auto *const pArtDmx = reinterpret_cast<artnet::ArtDmx *>(m_pReceiveBuffer);
 	const auto nDmxSlots = std::min(static_cast<uint32_t>(((pArtDmx->LengthHi << 8) & 0xff00) | pArtDmx->Length), artnet::DMX_LENGTH);
 
 	for (uint32_t nPortIndex = 0; nPortIndex < artnetnode::MAX_PORTS; nPortIndex++) {
 		if ((m_Node.Port[nPortIndex].direction == lightset::PortDir::OUTPUT)
 		 && (m_Node.Port[nPortIndex].protocol == artnet::PortProtocol::ARTNET)
 		 && (m_Node.Port[nPortIndex].PortAddress == pArtDmx->PortAddress)) {
+
+			const uint16_t port1_controllers[] = {370, 374, 378, 382, 386, 390, 394};
+			const uint16_t port2_controllers[] = {1, 5, 17, 21, 25, 29};
+			const uint16_t *port_controller = (nPortIndex == 0) ? port1_controllers : port2_controllers;
+			const uint8_t n_controllers = (nPortIndex == 0) ? sizeof(port1_controllers)/sizeof(port1_controllers[0]) : sizeof(port2_controllers)/sizeof(port2_controllers[0]);
+			for (uint8_t i = 0; i < n_controllers; i++) {
+				const uint16_t first_dmx_chan_idx = port_controller[i] - 1;
+				const double percent = pArtDmx->Data[first_dmx_chan_idx + 3] / 255.0;
+				pArtDmx->Data[first_dmx_chan_idx + 3] = 0;
+				pArtDmx->Data[first_dmx_chan_idx + 2] = static_cast<uint8_t>(pArtDmx->Data[first_dmx_chan_idx + 2] * percent);
+				pArtDmx->Data[first_dmx_chan_idx + 1] = static_cast<uint8_t>(pArtDmx->Data[first_dmx_chan_idx + 1] * percent);
+				pArtDmx->Data[first_dmx_chan_idx + 0] = static_cast<uint8_t>(pArtDmx->Data[first_dmx_chan_idx + 0] * percent);
+			}
 
 			m_OutputPort[nPortIndex].GoodOutput |= artnet::GoodOutput::DATA_IS_BEING_TRANSMITTED;
 

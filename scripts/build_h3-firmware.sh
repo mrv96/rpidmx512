@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 SECONDS=0
 
 cd ..
 
 find . -name "*.uImage" | xargs ls -al | wc -l
-find . -name "*.uImage" | xargs rm
+find . -name "*.uImage" | xargs rm -f
 
 cd -
 
