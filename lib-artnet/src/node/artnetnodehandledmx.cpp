@@ -95,6 +95,24 @@ void ArtNetNode::HandleDmx() {
 				pArtDmx->Data[first_dmx_chan_idx + 0] = static_cast<uint8_t>(pArtDmx->Data[first_dmx_chan_idx + 0] * percent);
 			}
 
+			if (nPortIndex == 1) {
+				const uint16_t port_controller[] = {100, 150};
+				const uint16_t n_controllers = sizeof(port_controller) / sizeof(port_controller[0]);
+
+				for (uint8_t i = 0; i < n_controllers; i++) {
+					const uint16_t first_dmx_chan_idx = port_controller[i] - 1;
+
+					for (unit8_t j = 38; j < 38+8; j++) {
+						double percent = pArtDmx->Data[first_dmx_chan_idx + j] / 255.0;
+
+						for (uint8_t k = 6; k < 38; k++) {
+							pArtDmx->Data[first_dmx_chan_idx + k] = static_cast<uint8_t>(pArtDmx->Data[first_dmx_chan_idx + k] * percent);
+						}
+						pArtDmx->Data[first_dmx_chan_idx + j] = 0;
+					}
+				}
+			}
+
 			m_OutputPort[nPortIndex].GoodOutput |= artnet::GoodOutput::DATA_IS_BEING_TRANSMITTED;
 
 			if (m_State.IsMergeMode) {
